@@ -84,8 +84,18 @@ def calc_xy_iou(gt_boxes: np.array, det_boxes: np.array):
 
 def calc_xy_iou_from_files(gt_file, submission_file):
     gt_boxes = np.fromfile(gt_file, dtype=__GT_BOX_DTYPE__)
-    detected_boxes = np.fromfile(submission_file, dtype=__GT_BOX_DTYPE__)
+    try:
+        detected_boxes = np.fromfile(submission_file, dtype=__GT_BOX_DTYPE__)
+    except Exception as ex:
+        print(f"Failed reading submission file: '{submission_file}'. adding 0 each gt to results compute. Exception: {ex}")
+        return np.zeros(len(gt_boxes), dtype=float)
+    
     return calc_xy_iou(gt_boxes, detected_boxes)
+
+
+def zero_iou_from_gt_file(gt_file):
+    gt_boxes = np.fromfile(gt_file, dtype=__GT_BOX_DTYPE__)
+    return np.zeros(len(gt_boxes), dtype=float)
 
 
 def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwargs):
@@ -146,19 +156,23 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
 
     # run evaluation frame by frame
     print("# Run evaluation")
+    gt_files = sorted(tmp_gt_dir.glob('*.bin'))
+    print(f'{len(gt_files)} gt files: {gt_files}')
     all_xy_iou = []
-    for gt_file in sorted(tmp_gt_dir.glob('*.bin')):
+    for gt_file in gt_files:
         print(f"gt file: '{gt_file}'")
         submission_file = tmp_submission_dir / gt_file.name
         if not submission_file.exists():
-            # todo: add to results [0] * gt's
-            print(f"submission file missing: '{submission_file}', adding 0 to results compute.")
+            # todo: add to results [0] * gt's            
+            print(f"submission file missing: '{submission_file}', adding 0 for each gt to results compute.")
+            xy_ious = zero_iou_from_gt_file(gt_file)
         else:
             print(f"submission file: '{submission_file}'")
             xy_ious = calc_xy_iou_from_files(gt_file, submission_file)
-            all_xy_iou += xy_ious.tolist()
-            print(f'all_xy_iou len - {len(all_xy_iou)}')
-    
+        
+        all_xy_iou += xy_ious.tolist()
+        print(f'all_xy_iou len - {len(all_xy_iou)}')
+
     avg_xy_iou = np.mean(all_xy_iou)
     print(f'# AVG_XY_IOU: {avg_xy_iou}')
 
