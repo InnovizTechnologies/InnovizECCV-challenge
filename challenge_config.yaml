@@ -52,6 +52,7 @@ challenge_phases:
         is_visible: True
       - name: publication_url
         is_visible: True
+    submission_meta_attributes: []
     is_restricted_to_select_one_submission: False
     is_partial_submission_evaluation_enabled: False
     allowed_submission_file_types: ".zip"
@@ -77,6 +78,7 @@ challenge_phases:
         is_visible: True
       - name: publication_url
         is_visible: True
+    submission_meta_attributes: []        
     is_restricted_to_select_one_submission: False
     is_partial_submission_evaluation_enabled: False
 
