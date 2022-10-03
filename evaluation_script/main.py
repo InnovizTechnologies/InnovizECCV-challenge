@@ -136,6 +136,11 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
             'submitted_at': u'2017-03-20T19:22:03.880652Z'
         }
     """
+    print("# Install external packages")
+    import os
+    ecode = os.system("python -m pip install shapely")
+    assert ecode == 0
+    
     output = {}
     print(f"# Evaluating for '{phase_codename}' Phase")
     print(f"test_annotation_file '{test_annotation_file}'")
