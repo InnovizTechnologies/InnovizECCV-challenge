@@ -16,3 +16,4 @@ __pycache__
 *.zip
 !submission.zip
 !annotations/test_annotations_devsplit.zip
+evaluation_script/key.txt

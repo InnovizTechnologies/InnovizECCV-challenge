@@ -3,6 +3,7 @@ import json
 import os
 import requests
 import sys
+from pathlib import Path
 
 from config import *
 from utils import (
@@ -28,13 +29,24 @@ if not GITHUB_AUTH_TOKEN:
     )
     sys.exit(1)
 
+GITHUB_ECCV_ENCRYPTION_KEY = os.getenv('GITHUB_ECCV_ENCRYPTION_KEY')
+if not GITHUB_ECCV_ENCRYPTION_KEY:
+    print(
+        "Please add your annotation test file enctipyion key ECCV_ENCRYPTION_KEY"
+    )
+    sys.exit(1)
+
 HOST_AUTH_TOKEN = None
 CHALLENGE_HOST_TEAM_PK = None
 EVALAI_HOST_URL = None
 
 
 if __name__ == "__main__":
+    # innoviz add on - create encripyion key file
+    with open(Path(__file__).parent.parent / 'evaluation_script' / 'key.txt', 'w') as f:
+        f.write(GITHUB_ECCV_ENCRYPTION_KEY)
 
+    # original code
     configs = load_host_configs(HOST_CONFIG_FILE_PATH)
     if configs:
         HOST_AUTH_TOKEN = configs[0]

@@ -138,7 +138,7 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     """
     print("# Install external packages")
     import os
-    ecode = os.system("python -m pip install shapely")
+    ecode = os.system("python -m pip install shapely cryptography")
     assert ecode == 0
     
     output = {}
@@ -152,18 +152,37 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     user_submission_file = Path(user_submission_file)
     assert test_annotation_file.exists()
     assert user_submission_file.exists()
-    print(f"Unzip gt '{test_annotation_file}'")
     timestamp = int(time.time() * 1e6) # used for run unique folder name
-    tmp_gt_dir = tmp_dir(timestamp, test_annotation_file.name)
-    shutil.unpack_archive(str(test_annotation_file), str(tmp_gt_dir))
 
-    print(f"Unzip gt '{user_submission_file}'")
+    tmp_enc_dir = None
+    if test_annotation_file.suffix == '.enc':
+        print("# Decrypt test annotation file")
+        from cryptography.fernet import Fernet
+        key = (Path(__file__).parent / 'key.txt').read_bytes()
+        tmp_enc_dir = tmp_dir(timestamp, test_annotation_file.name)
+        tmp_enc_dir.mkdir()
+
+        # decrypt
+        f = Fernet(key)
+        data = test_annotation_file.read_bytes()
+        data_dec = f.decrypt(data)
+
+        # dump zip file
+        test_annotation_file = tmp_enc_dir / test_annotation_file.name[:-4]
+        with open(test_annotation_file, 'wb') as f:
+            f.write(data_dec)
+
+    print(f"Unzip annotation file '{test_annotation_file}'")
+    tmp_annotations_dir = tmp_dir(timestamp, test_annotation_file.name)
+    shutil.unpack_archive(str(test_annotation_file), str(tmp_annotations_dir))
+
+    print(f"Unzip submission file '{user_submission_file}'")
     tmp_submission_dir = tmp_dir(timestamp, user_submission_file.name)
     shutil.unpack_archive(str(user_submission_file), str(tmp_submission_dir))
 
     # run evaluation frame by frame
     print("# Run evaluation")
-    gt_files = sorted(tmp_gt_dir.glob('*.bin'))
+    gt_files = sorted(tmp_annotations_dir.glob('*.bin'))
     print(f'{len(gt_files)} gt files: {gt_files}')
     all_xy_iou = []
     for gt_file in gt_files:
@@ -194,10 +213,15 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     output["submission_result"] = output["result"][0]["test_split"]
 
     print("# Cleanups")
-    print(f"delete '{tmp_gt_dir}'")
-    shutil.rmtree(tmp_gt_dir)
-    print(f"delete '{tmp_submission_dir}'")
-    shutil.rmtree(tmp_submission_dir)
+    if tmp_annotations_dir.exists():
+        print(f"delete '{tmp_annotations_dir}'")
+        shutil.rmtree(tmp_annotations_dir)
+    if tmp_submission_dir.exists():
+        print(f"delete '{tmp_submission_dir}'")
+        shutil.rmtree(tmp_submission_dir)
+    if tmp_enc_dir is not None and tmp_enc_dir.exists():
+        print(f"delete '{tmp_enc_dir}'")
+        shutil.rmtree(tmp_enc_dir)
 
     print(f"# Completed evaluation for '{phase_codename}' Phase")
     return output
