@@ -11,3 +11,8 @@ venv/
 # cache
 __pycache__
 *.pyc
+
+# zip
+*.zip
+!submission.zip
+!annotations/test_annotations_devsplit.zip

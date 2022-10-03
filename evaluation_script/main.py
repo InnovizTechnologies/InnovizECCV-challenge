@@ -138,6 +138,8 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     """
     output = {}
     print(f"# Evaluating for '{phase_codename}' Phase")
+    print(f"test_annotation_file '{test_annotation_file}'")
+    print(f"user_submission_file '{user_submission_file}'")
 
     # read input
     print("# Read inputs")
