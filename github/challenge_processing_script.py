@@ -32,7 +32,7 @@ if not GITHUB_AUTH_TOKEN:
 GITHUB_ECCV_ENCRYPTION_KEY = os.getenv('GITHUB_ECCV_ENCRYPTION_KEY')
 if not GITHUB_ECCV_ENCRYPTION_KEY:
     print(
-        "Please add your annotation test file enctipyion key ECCV_ENCRYPTION_KEY"
+        "Please add your github annotation test file enctipyion key to the repository secrets with the name ECCV_ENCRYPTION_KEY"
     )
     sys.exit(1)
 
