@@ -1,0 +1,1 @@
+cp /mnt/weka01/cvalgo_dev_env/markk/eccv_dataset/innoviz_2022-09-23/innoviz_2022-09-23_eval_gt.zip ./annotations/
