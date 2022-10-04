@@ -168,7 +168,7 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
         data_dec = f.decrypt(data)
 
         # dump zip file
-        test_annotation_file = tmp_enc_dir / test_annotation_file.name[:-4]
+        test_annotation_file = tmp_enc_dir / test_annotation_file.name.replace('.enc', '.zip')
         with open(test_annotation_file, 'wb') as f:
             f.write(data_dec)
 
