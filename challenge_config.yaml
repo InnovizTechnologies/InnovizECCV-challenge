@@ -57,7 +57,7 @@ challenge_phases:
     is_partial_submission_evaluation_enabled: False
     allowed_submission_file_types: ".zip"
   - id: 2
-    name: Test Phase
+    name: Evaluation Phase
     description: templates/challenge_phase_2_description.html
     leaderboard_public: True
     is_public: True
@@ -65,7 +65,7 @@ challenge_phases:
     start_date: 2019-01-01 00:00:00
     end_date: 2099-05-24 23:59:59
     test_annotation_file: annotations/innoviz_2022-09-23_eval_gt.zip.enc
-    codename: test
+    codename: eval
     max_submissions_per_day: 5
     max_submissions_per_month: 50
     max_submissions: 50
@@ -84,8 +84,11 @@ challenge_phases:
 
 dataset_splits:
   - id: 1
-    name: Test Split
-    codename: test_split
+    name: Dev Split
+    codename: dev_split
+  - id: 2
+    name: Evaluation Split
+    codename: eval_split
 
 challenge_phase_splits:
   - challenge_phase_id: 1
@@ -96,7 +99,7 @@ challenge_phase_splits:
     is_leaderboard_order_descending: True
   - challenge_phase_id: 2
     leaderboard_id: 1
-    dataset_split_id: 1
+    dataset_split_id: 2
     visibility: 3
     leaderboard_decimal_precision: 2
     is_leaderboard_order_descending: True

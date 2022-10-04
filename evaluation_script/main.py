@@ -204,14 +204,16 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
 
     output["result"] = [
         {
-            "test_split": {
+            f"{phase_codename}_split": {
                 "AVG_XY_IOU": avg_xy_iou,
             }
         }
     ]
     # To display the results in the result file
-    output["submission_result"] = output["result"][0]["test_split"]
-
+    output["submission_result"] = output["result"][0][f"{phase_codename}_split"]
+    print("# Output")
+    print(output)
+    
     print("# Cleanups")
     if tmp_annotations_dir.exists():
         print(f"delete '{tmp_annotations_dir}'")
