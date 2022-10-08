@@ -98,7 +98,7 @@ def calc_xy_iou_from_files(target_file: str or Path, ref_file: str or Path):
         print(f"Failed reading submission file: '{ref_file}'. adding 0 each gt to results compute. Exception: {ex}")
         return np.zeros(len(target_boxes), dtype=float)
     
-    print(f'calculating metrics. {len(target_boxes)} gt_boxes, {len(ref_boxes)} detected boxes')
+    print(f'calculating metrics. {len(target_boxes)} target boxes, {len(ref_boxes)} ref boxes')
     ious = calc_xy_iou(target_boxes, ref_boxes)
     print(f'ious: {ious}')
 
@@ -195,7 +195,7 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     # run evaluation frame by frame
     print("# Run evaluation")
     gt_files = sorted(tmp_annotations_dir.glob('*.bin'))
-    print(f'{len(gt_files)} gt files: {gt_files}')
+    print(f'{len(gt_files)} gt files: {[str(f) for f in gt_files]}')
     all_gt_xy_iou = []
     all_det_xy_iou = []
     for gt_file in gt_files:
@@ -204,10 +204,12 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
         if not submission_file.exists():
             print(f"submission file missing: '{submission_file}', adding 0 for each gt to results compute.")
             gt_xy_ious = zero_iou_from_gt_file(gt_file)
-            det_xy_iou = np.zeros(0)
+            det_xy_iou = zero_iou_from_gt_file(gt_file)
         else:
             print(f"submission file: '{submission_file}'")
+            print('calc gt vs det xy ious')
             gt_xy_ious = calc_xy_iou_from_files(gt_file, submission_file)
+            print('calc det vs get xy ious')
             det_xy_iou = calc_xy_iou_from_files(submission_file, gt_file)
         
         all_gt_xy_iou += gt_xy_ious.tolist()
