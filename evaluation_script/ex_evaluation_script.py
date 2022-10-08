@@ -29,5 +29,5 @@ def run_eval_set():
 
 if __name__ == "__main__":
     # run_dev_set()
-    run_dev_set1()
-    # run_eval_set()
+    # run_dev_set1()
+    run_eval_set()
