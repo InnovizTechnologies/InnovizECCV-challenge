@@ -66,31 +66,43 @@ def tmp_dir(timestamp: int, name: str) -> Path:
     return Path(tempfile.gettempdir()) / f'{timestamp}_{name}'
 
 
-def calc_xy_iou(gt_boxes: np.array, det_boxes: np.array):
+def calc_xy_iou(target_boxes: np.array, ref_boxes: np.array):
+    """ to each box best ref box match is found using xy iou as metric.
+    Args:
+        tgt_boxes (np.array): target boxes, to each box best match from ref boxes is found
+        ref_boxes (np.array): ref boxes, to each box best match from ref boxes is found
+
+    Returns:
+        np.array: numpy array in size of tgt_boxes
+    """
     # https://stackoverflow.com/questions/44797713/calculate-the-area-of-intersection-of-two-rotated-rectangles-in-python
-    print(f'calculating metrics. {len(gt_boxes)} gt_boxes, {len(det_boxes)} detected boxes')
     # create a result matrix in size of inputs
-    results = np.empty((len(gt_boxes), len(det_boxes)), dtype=float)
-    for ri, gt_box in enumerate(gt_boxes):
-        for ci, det_box in enumerate(det_boxes):
-            results[ri, ci] = (IOUBox.from_numpy(gt_box)).iou(IOUBox.from_numpy(det_box))
+    results = np.empty((len(target_boxes), len(ref_boxes)), dtype=float)
+    for ri, tgt_box in enumerate(target_boxes):
+        for ci, ref_box in enumerate(ref_boxes):
+            results[ri, ci] = (IOUBox.from_numpy(tgt_box)).iou(IOUBox.from_numpy(ref_box))
     
     # for each gt use iou of detection with max iou (best match)
     ious = np.max(results, axis=1)
-    print(f'ious: {ious}')
 
     return ious
 
 
-def calc_xy_iou_from_files(gt_file, submission_file):
-    gt_boxes = np.fromfile(gt_file, dtype=__GT_BOX_DTYPE__)
+def calc_xy_iou_from_files(target_file: str or Path, ref_file: str or Path):
+    """ to each box at target_file, best ref box match in ref_file  is found using xy iou as metric.
+    """
+    target_boxes = np.fromfile(target_file, dtype=__GT_BOX_DTYPE__)
     try:
-        detected_boxes = np.fromfile(submission_file, dtype=__GT_BOX_DTYPE__)
+        ref_boxes = np.fromfile(ref_file, dtype=__GT_BOX_DTYPE__)
     except Exception as ex:
-        print(f"Failed reading submission file: '{submission_file}'. adding 0 each gt to results compute. Exception: {ex}")
-        return np.zeros(len(gt_boxes), dtype=float)
+        print(f"Failed reading submission file: '{ref_file}'. adding 0 each gt to results compute. Exception: {ex}")
+        return np.zeros(len(target_boxes), dtype=float)
     
-    return calc_xy_iou(gt_boxes, detected_boxes)
+    print(f'calculating metrics. {len(target_boxes)} gt_boxes, {len(ref_boxes)} detected boxes')
+    ious = calc_xy_iou(target_boxes, ref_boxes)
+    print(f'ious: {ious}')
+
+    return ious 
 
 
 def zero_iou_from_gt_file(gt_file):
@@ -184,22 +196,31 @@ def evaluate(test_annotation_file, user_submission_file, phase_codename, **kwarg
     print("# Run evaluation")
     gt_files = sorted(tmp_annotations_dir.glob('*.bin'))
     print(f'{len(gt_files)} gt files: {gt_files}')
-    all_xy_iou = []
+    all_gt_xy_iou = []
+    all_det_xy_iou = []
     for gt_file in gt_files:
         print(f"gt file: '{gt_file}'")
         submission_file = tmp_submission_dir / gt_file.name
         if not submission_file.exists():
-            # todo: add to results [0] * gt's            
             print(f"submission file missing: '{submission_file}', adding 0 for each gt to results compute.")
-            xy_ious = zero_iou_from_gt_file(gt_file)
+            gt_xy_ious = zero_iou_from_gt_file(gt_file)
+            det_xy_iou = np.zeros(0)
         else:
             print(f"submission file: '{submission_file}'")
-            xy_ious = calc_xy_iou_from_files(gt_file, submission_file)
+            gt_xy_ious = calc_xy_iou_from_files(gt_file, submission_file)
+            det_xy_iou = calc_xy_iou_from_files(submission_file, gt_file)
         
-        all_xy_iou += xy_ious.tolist()
-        print(f'all_xy_iou len - {len(all_xy_iou)}')
+        all_gt_xy_iou += gt_xy_ious.tolist()
+        all_det_xy_iou += det_xy_iou.tolist()
+        print(f'all_gt_xy_iou len - {len(all_gt_xy_iou)}')
+        print(f'all_det_xy_iou len - {len(all_det_xy_iou)}')
 
-    avg_xy_iou = np.mean(all_xy_iou)
+    avg_gt_xy_iou = np.mean(all_gt_xy_iou)
+    avg_det_xy_iou = np.mean(all_det_xy_iou)
+    avg_xy_iou = 0.5 * avg_gt_xy_iou + 0.5 * avg_det_xy_iou
+
+    print(f'# AVG_GT_VS_DET_XY_IOU: {avg_gt_xy_iou}')
+    print(f'# AVG_DET_VS_GT_XY_IOU: {avg_det_xy_iou}')
     print(f'# AVG_XY_IOU: {avg_xy_iou}')
 
     output["result"] = [
